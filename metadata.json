@@ -1,0 +1,7 @@
+{
+  "name": "EarnGram",
+  "description": "Modern social media app to share photos and videos, and earn real money rewards based on engagement and ad revenue sharing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

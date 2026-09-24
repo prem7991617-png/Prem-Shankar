@@ -1,0 +1,119 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isSuspended', 'primaryMobileVerified']);
+      allow delete: if isAdmin();
+    }
+
+    // Posts Collection
+    match /posts/{postId} {
+      // Any authenticated user can read approved posts; creators can read their own pending posts
+      allow read: if isAuthenticated() && (resource.data.status == 'APPROVED' || resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Upload: New posts must start with status PENDING, zero initial likes, and belong to sender
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'PENDING'
+        && request.resource.data.likesCount == 0
+        && request.resource.data.eligibleRewardScore == 0.0;
+
+      // Only Admin or Cloud Functions can approve/reject posts or alter eligibleRewardScore
+      allow update: if isAdmin();
+      allow delete: if isAdmin() || (isOwner(resource.data.userId) && resource.data.status == 'PENDING');
+    }
+
+    // Likes Collection (1 Like per user per post enforced)
+    match /likes/{likeId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() 
+        && request.resource.data.userId == request.auth.uid
+        && likeId == request.resource.data.postId + '_' + request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Comments Collection
+    match /comments/{commentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    // CRITICAL: Wallets Collection (NO CLIENT-SIDE BALANCE MODIFICATIONS ALLOWED!)
+    match /wallets/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      // Write/Update STRICTLY FORBIDDEN by normal clients - only Cloud Functions with Admin SDK
+      allow write: if isAdmin();
+    }
+
+    // CRITICAL: Financial Transactions Ledger
+    match /transactions/{transactionId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      // Transactions must only be recorded by server-side Cloud Functions or Admin
+      allow write: if isAdmin();
+    }
+
+    // Withdrawals Collection
+    match /withdrawals/{withdrawalId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Creators can only submit with status PENDING and minimum ₹100
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'PENDING'
+        && request.resource.data.amount >= 100.0;
+        
+      // Status transition to APPROVED, PROCESSING, PAID, REJECTED strictly restricted to Admin
+      allow update: if isAdmin();
+      allow delete: if false; // Financial audit records are immutable
+    }
+
+    // Content Reports Collection
+    match /reports/{reportId} {
+      allow create: if isAuthenticated() && request.resource.data.reporterUserId == request.auth.uid;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Reward Cycles Collection (40% Pool / 60% Platform Share audits)
+    match /reward_cycles/{cycleId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Ad Revenue Collection
+    match /ad_revenue/{revenueId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Notifications Collection
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid; // for marking as read
+      allow create: if isAdmin();
+    }
+
+    // Admin Settings (Ad units, adsterra keys, reward rates)
+    match /admin_settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+  }
+}

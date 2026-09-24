@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Camera Body Silhouette (Centered in 66dp safe zone: x from 24 to 84, y from 28 to 80) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M34,32 L40,32 L43,28 L65,28 L68,32 L74,32 C78.4,32 82,35.6 82,40 L82,72 C82,76.4 78.4,80 74,80 L34,80 C29.6,80 26,76.4 26,72 L26,40 C26,35.6 29.6,32 34,32 Z" />
+    <!-- Lens Outer Ring cutout -->
+    <path
+        android:fillColor="#4F46E5"
+        android:pathData="M54,41 C44.6,41 37,48.6 37,58 C37,67.4 44.6,75 54,75 C63.4,75 71,67.4 71,58 C71,48.6 63.4,41 54,41 Z" />
+    <!-- Inner Lens with Rupee / Sparkle Symbol in Gold -->
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M54,46 C47.4,46 42,51.4 42,58 C42,64.6 47.4,70 54,70 C60.6,70 66,64.6 66,58 C66,51.4 60.6,46 54,46 Z" />
+    <!-- Rupee / Play Symbol inside Lens -->
+    <path
+        android:fillColor="#1E1B4B"
+        android:pathData="M50,51 L58,51 M50,54 L56,54 M50,51 L50,65 M50,57 C53,57 55,55 55,53.5 C55,52 53.5,51 50,51 M52,58 L57,65"
+        android:strokeWidth="2"
+        android:strokeColor="#1E1B4B" />
+    <!-- Flash dot -->
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M74,38 A3,3 0 1,1 68,38 A3,3 0 1,1 74,38" />
+</vector>
